@@ -1,0 +1,2 @@
+-- Applied remotely via Supabase. Kept in-repo for review.
+-- Helpers, indexes, RLS replacement, cascade, bootstrap RPC.
