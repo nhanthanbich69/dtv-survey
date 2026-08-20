@@ -11,6 +11,9 @@ export function friendlyError(error: unknown, fallback = "Đã xảy ra lỗi. V
     for (const [key, vi] of Object.entries(map)) {
       if (message.includes(key)) return vi;
     }
+    if (/rate limit exceeded|too many requests|email rate limit/i.test(message)) {
+      return "Supabase đang giới hạn số email xác nhận. Vui lòng chờ khoảng một giờ rồi thử lại, hoặc tắt xác nhận email trong Supabase Auth.";
+    }
     if (/permission|rls|row-level|not authorized|42501/i.test(message)) {
       return "Bạn không có quyền thực hiện thao tác này.";
     }

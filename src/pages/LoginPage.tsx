@@ -98,6 +98,7 @@ function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [registered, setRegistered] = useState(false);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
@@ -123,6 +124,11 @@ function RegisterForm() {
       if (signUpError) throw signUpError;
       const userId = data.user?.id;
       if (!userId) throw new Error("Không tạo được tài khoản.");
+
+      if (!data.session) {
+        setRegistered(true);
+        return;
+      }
 
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: userId,
@@ -153,6 +159,7 @@ function RegisterForm() {
           <p className="lead">Tạo tài khoản người dùng thường để truy cập hệ thống.</p>
         </div>
         {error ? <div className="error">{error}</div> : null}
+        {registered ? <div className="success">Tài khoản đã được tạo. Vui lòng kiểm tra email để xác nhận trước khi đăng nhập.</div> : null}
         <label className="field">
           Họ tên
           <input required value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -165,7 +172,7 @@ function RegisterForm() {
           Mật khẩu
           <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
         </label>
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" disabled={busy || registered}>
           {busy ? "Đang tạo..." : "Tạo tài khoản"}
         </Button>
         <p className="hint">
