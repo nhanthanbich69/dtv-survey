@@ -42,9 +42,10 @@ function LoginForm() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
     setBusy(true);
     setError(null);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     if (authError) {
       setBusy(false);
       setError(friendlyError(authError, "Không đăng nhập được."));
@@ -113,8 +114,9 @@ function RegisterForm() {
     setBusy(true);
     setError(null);
     try {
+      const normalizedEmail = email.trim().toLowerCase();
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: { data: { full_name: fullName.trim() } },
       });
@@ -124,7 +126,7 @@ function RegisterForm() {
 
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: userId,
-        email,
+        email: normalizedEmail,
         full_name: fullName.trim(),
         role: "staff",
         tenant_id: null,
@@ -132,7 +134,7 @@ function RegisterForm() {
       }, { onConflict: "id" });
       if (profileError) throw profileError;
 
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (loginError) throw loginError;
 
       navigate("/dashboard", { replace: true });

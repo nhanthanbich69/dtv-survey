@@ -24,6 +24,7 @@ export function SetupPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
     if (!password.trim()) {
       setError("Mật khẩu không được bỏ trống.");
       return;
@@ -32,11 +33,11 @@ export function SetupPage() {
     setError(null);
     try {
       await invokeFunction("bootstrap-admin", {
-        email,
+        email: normalizedEmail,
         password,
         full_name: fullName,
       });
-      const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (loginError) throw loginError;
       navigate("/dashboard", { replace: true });
     } catch (err) {
