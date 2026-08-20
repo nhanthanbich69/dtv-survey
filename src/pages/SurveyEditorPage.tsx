@@ -15,7 +15,6 @@ import {
   type Question,
   type QuestionType,
   type Survey,
-  type Tenant,
 } from "../lib/types";
 import { Button, Spinner, useToast } from "../components/ui";
 import { QuestionPreview } from "../components/QuestionPreview";
@@ -24,13 +23,11 @@ const TYPES = Object.keys(QUESTION_TYPE_LABEL) as QuestionType[];
 
 export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
   const { id } = useParams();
-  const { isAdmin, profile, canPublish, canWriteSurveys } = useAuth();
+  const { profile, canPublish, canWriteSurveys } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [tenantId, setTenantId] = useState(profile?.tenant_id ?? "");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [slug, setSlug] = useState("");
@@ -39,16 +36,6 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
   const [questions, setQuestions] = useState<Question[]>([createQuestion()]);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    void supabase
-      .from("tenants")
-      .select("*")
-      .eq("status", "active")
-      .order("name")
-      .then(({ data }) => setTenants((data ?? []) as unknown as Tenant[]));
-  }, [isAdmin]);
 
   useEffect(() => {
     if (mode !== "edit" || !id) return;
@@ -69,7 +56,6 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
         setSlug(s.public_slug);
         setSlugLocked(s.status !== "draft");
         setStatus(s.status);
-        setTenantId(s.tenant_id);
         setQuestions(Array.isArray(s.questions) && s.questions.length ? (s.questions as Question[]) : [createQuestion()]);
         setLoading(false);
       });
@@ -104,11 +90,6 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
       setError("Vui lòng nhập tên khảo sát.");
       return;
     }
-    const tid = isAdmin ? tenantId : profile?.tenant_id;
-    if (!tid) {
-      setError("Vui lòng chọn khách hàng.");
-      return;
-    }
     const qErr = validateQuestions(questions);
     if (nextStatus === "published" && qErr) {
       setError(qErr);
@@ -121,7 +102,7 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
     const publicSlug = slug.trim() || slugify(title);
     setSaving(true);
     const payload = {
-      tenant_id: tid,
+      tenant_id: null,
       title: title.trim(),
       description: description.trim() || null,
       public_slug: publicSlug,
@@ -168,19 +149,6 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
     >
       {error ? <div className="error">{error}</div> : null}
       <div className="card card-pad form-grid">
-        {isAdmin ? (
-          <label className="field">
-            Khách hàng
-            <select required value={tenantId} onChange={(e) => setTenantId(e.target.value)}>
-              <option value="">— Chọn khách hàng —</option>
-              {tenants.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} ({t.code})
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
         <label className="field">
           Tên khảo sát
           <input required value={title} onChange={(e) => setTitle(e.target.value)} />

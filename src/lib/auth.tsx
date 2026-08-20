@@ -55,15 +55,6 @@ async function loadProfile(userId: string): Promise<{ profile: Profile | null; d
   if (profile.status !== "active") {
     return { profile: null, denial: "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên." };
   }
-  if (profile.role !== "admin") {
-    const tenant = profile.tenants;
-    if (!profile.tenant_id || !tenant) {
-      return { profile: null, denial: "Tài khoản chưa được gán khách hàng. Vui lòng liên hệ quản trị viên." };
-    }
-    if (tenant.status !== "active") {
-      return { profile: null, denial: "Khách hàng của bạn đang ngưng hoạt động. Vui lòng liên hệ quản trị viên." };
-    }
-  }
   return { profile, denial: null };
 }
 
