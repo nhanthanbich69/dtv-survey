@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { friendlyError } from "../lib/errors";
@@ -20,7 +20,17 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(denial);
   const [busy, setBusy] = useState(false);
+  const [needsBootstrap, setNeedsBootstrap] = useState<boolean | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    void supabase
+      .rpc("needs_bootstrap")
+      .then(({ data, error: rpcError }) => {
+        if (rpcError) setNeedsBootstrap(false);
+        else setNeedsBootstrap(Boolean(data));
+      });
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -61,12 +71,11 @@ function LoginForm() {
         <Button type="submit" disabled={busy}>
           {busy ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
-        <p className="hint">
-          Chưa có tài khoản? <Link to="/setup">Tạo tài khoản quản trị</Link>
-        </p>
-        <p className="hint">
-          Tài khoản do quản trị viên cấp. <Link to="/setup">Thiết lập lần đầu</Link> chỉ dùng khi hệ thống chưa có quản trị viên.
-        </p>
+        {needsBootstrap === true ? (
+          <p className="hint">
+            Hệ thống chưa có quản trị viên. <Link to="/setup">Thiết lập tài khoản quản trị đầu tiên</Link>
+          </p>
+        ) : null}
       </form>
     </div>
   );
