@@ -76,7 +76,7 @@ export function SetupPage() {
         </label>
         <label className="field">
           Email
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value.trim().toLowerCase())} />
         </label>
         <label className="field">
           Mật khẩu

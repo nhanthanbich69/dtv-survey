@@ -131,6 +131,7 @@ function UserForm({
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
     if (!existing && password.length < 8) {
       setError("Mật khẩu cần ít nhất 8 ký tự.");
       return;
@@ -143,7 +144,7 @@ function UserForm({
         {
           action: existing ? "update" : "create",
           id: existing?.id,
-          email,
+          email: normalizedEmail,
           password: password || undefined,
           full_name: fullName,
           role,
@@ -170,7 +171,7 @@ function UserForm({
         </label>
         <label className="field">
           Email
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={Boolean(existing)} />
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value.trim().toLowerCase())} disabled={Boolean(existing)} />
         </label>
         <label className="field">
           {existing ? "Mật khẩu mới (để trống nếu giữ nguyên)" : "Mật khẩu"}

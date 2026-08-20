@@ -71,7 +71,7 @@ function LoginForm() {
         {error ? <div className="error">{error}</div> : null}
         <label className="field">
           Email
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value.trim().toLowerCase())} autoComplete="username" />
         </label>
         <label className="field">
           Mật khẩu
@@ -159,7 +159,7 @@ function RegisterForm() {
         </label>
         <label className="field">
           Email
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value.trim().toLowerCase())} autoComplete="username" />
         </label>
         <label className="field">
           Mật khẩu
