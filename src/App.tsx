@@ -8,7 +8,7 @@ import { SurveyDetailPage } from "./pages/SurveyDetailPage";
 import { SurveyEditorPage } from "./pages/SurveyEditorPage";
 import { ResultsPage } from "./pages/ResultsPage";
 import { UsersPage } from "./pages/UsersPage";
-import { TenantsPage } from "./pages/TenantsPage";
+
 import { AccountPage } from "./pages/AccountPage";
 import { HomePage, NotFoundPage, PublicSurveyPage } from "./pages/PublicSurveyPage";
 
@@ -27,7 +27,6 @@ export default function App() {
         <Route path="/surveys/:id/edit" element={<SurveyEditorPage mode="edit" />} />
         <Route path="/surveys/:id/results" element={<ResultsPage />} />
         <Route path="/users" element={<UsersPage />} />
-        <Route path="/tenants" element={<TenantsPage />} />
         <Route path="/account" element={<AccountPage />} />
       </Route>
       <Route path="/404" element={<NotFoundPage />} />

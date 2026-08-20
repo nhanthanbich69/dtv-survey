@@ -3,10 +3,10 @@ import { invokeFunction, supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { friendlyError } from "../lib/errors";
 import { formatDateTime } from "../lib/survey";
-import { ROLE_LABEL, type Profile, type Role, type Tenant } from "../lib/types";
+import { ROLE_LABEL, type Profile, type Role } from "../lib/types";
 import { AdminOnly } from "../components/layout";
 import { Button, Modal, Spinner, useToast } from "../components/ui";
-import { asList, asOne } from "../lib/cast";
+import { asList } from "../lib/cast";
 
 export function UsersPage() {
   return (
@@ -19,7 +19,6 @@ export function UsersPage() {
 function UsersAdmin() {
   const { session } = useAuth();
   const [rows, setRows] = useState<Profile[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [edit, setEdit] = useState<Profile | null>(null);
@@ -27,17 +26,8 @@ function UsersAdmin() {
 
   async function load() {
     setLoading(true);
-    const [{ data: users }, { data: t }] = await Promise.all([
-      supabase.from("profiles").select("*, tenants(id, name, code, status)").order("created_at", { ascending: false }),
-      supabase.from("tenants").select("*").order("name"),
-    ]);
-    setRows(
-      asList<Profile>(users).map((u) => ({
-        ...u,
-        tenants: asOne<NonNullable<Profile["tenants"]>>(u.tenants),
-      })),
-    );
-    setTenants(asList<Tenant>(t));
+    const { data: users } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    setRows(asList<Profile>(users));
     setLoading(false);
   }
 
@@ -65,7 +55,6 @@ function UsersAdmin() {
                   <th>Họ tên</th>
                   <th>Email</th>
                   <th>Vai trò</th>
-                  <th>Khách hàng</th>
                   <th>Trạng thái</th>
                   <th>Ngày tạo</th>
                   <th></th>
@@ -77,7 +66,6 @@ function UsersAdmin() {
                     <td>{u.full_name || "—"}</td>
                     <td>{u.email}</td>
                     <td>{ROLE_LABEL[u.role]}</td>
-                    <td>{u.tenants?.name ?? (u.role === "admin" ? "Toàn hệ thống" : "—")}</td>
                     <td>
                       <span className={`badge ${u.status}`}>{u.status === "active" ? "Hoạt động" : "Ngưng"}</span>
                     </td>
@@ -96,7 +84,6 @@ function UsersAdmin() {
       </div>
       {open ? (
         <UserForm
-          tenants={tenants}
           token={session?.access_token}
           onClose={() => setOpen(false)}
           onSaved={() => {
@@ -108,7 +95,6 @@ function UsersAdmin() {
       ) : null}
       {edit ? (
         <UserForm
-          tenants={tenants}
           token={session?.access_token}
           existing={edit}
           onClose={() => setEdit(null)}
@@ -125,13 +111,11 @@ function UsersAdmin() {
 }
 
 function UserForm({
-  tenants,
   token,
   existing,
   onClose,
   onSaved,
 }: {
-  tenants: Tenant[];
   token?: string;
   existing?: Profile;
   onClose: () => void;
@@ -141,17 +125,12 @@ function UserForm({
   const [email, setEmail] = useState(existing?.email ?? "");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>(existing?.role ?? "staff");
-  const [tenantId, setTenantId] = useState(existing?.tenant_id ?? "");
   const [status, setStatus] = useState(existing?.status ?? "active");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (role !== "admin" && !tenantId) {
-      setError("Người dùng không phải admin phải thuộc một khách hàng.");
-      return;
-    }
     if (!existing && password.length < 8) {
       setError("Mật khẩu cần ít nhất 8 ký tự.");
       return;
@@ -168,7 +147,7 @@ function UserForm({
           password: password || undefined,
           full_name: fullName,
           role,
-          tenant_id: role === "admin" ? null : tenantId,
+          tenant_id: null,
           status,
         },
         token,
@@ -207,19 +186,6 @@ function UserForm({
             ))}
           </select>
         </label>
-        {role !== "admin" ? (
-          <label className="field">
-            Khách hàng
-            <select required value={tenantId} onChange={(e) => setTenantId(e.target.value)}>
-              <option value="">— Chọn —</option>
-              {tenants.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
         <label className="field">
           Trạng thái
           <select value={status} onChange={(e) => setStatus(e.target.value as "active" | "inactive")}>

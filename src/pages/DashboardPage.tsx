@@ -5,8 +5,6 @@ import { useAuth } from "../lib/auth";
 import { formatDateTime } from "../lib/survey";
 import { SURVEY_STATUS_LABEL, type Survey, type SurveyStatus } from "../lib/types";
 import { Spinner } from "../components/ui";
-import { asOne } from "../lib/cast";
-
 type Stats = {
   total: number;
   draft: number;
@@ -17,23 +15,19 @@ type Stats = {
 };
 
 export function DashboardPage() {
-  const { isAdmin, profile } = useAuth();
+  const { profile } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
-      let surveyQuery = supabase.from("surveys").select("id, title, status, created_at, published_at, tenant_id, tenants(name)");
-      if (!isAdmin && profile?.tenant_id) surveyQuery = surveyQuery.eq("tenant_id", profile.tenant_id);
+      const surveyQuery = supabase.from("surveys").select("id, title, status, created_at, published_at");
       const { data: surveys, error: sErr } = await surveyQuery.order("created_at", { ascending: false });
       if (sErr) {
         setError("Không tải được dữ liệu tổng quan.");
         return;
       }
-      const list = (surveys ?? []).map((s) => ({
-        ...(s as unknown as Survey),
-        tenants: asOne<NonNullable<Survey["tenants"]>>(s.tenants),
-      }));
+      const list = (surveys ?? []) as unknown as Survey[];
       const ids = list.map((s) => s.id);
       let responseCount = 0;
       if (ids.length) {
@@ -53,7 +47,7 @@ export function DashboardPage() {
         recent: list.slice(0, 8),
       });
     })();
-  }, [isAdmin, profile?.tenant_id]);
+  }, []);
 
   if (error) return <div className="error">{error}</div>;
   if (!stats) return <Spinner />;
@@ -98,7 +92,6 @@ export function DashboardPage() {
               <thead>
                 <tr>
                   <th>Tên khảo sát</th>
-                  <th>Khách hàng</th>
                   <th>Trạng thái</th>
                   <th>Ngày tạo</th>
                 </tr>
@@ -109,7 +102,6 @@ export function DashboardPage() {
                     <td>
                       <Link to={`/surveys/${s.id}`}>{s.title || "Chưa đặt tên"}</Link>
                     </td>
-                    <td>{s.tenants?.name ?? "—"}</td>
                     <td>
                       <span className={`badge ${s.status}`}>{SURVEY_STATUS_LABEL[s.status]}</span>
                     </td>

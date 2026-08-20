@@ -41,10 +41,7 @@ Deno.serve(async (req) => {
     const action = body.action as string;
     const role = String(body.role ?? "staff");
     if (!ROLES.has(role)) return json({ error: "Vai trò không hợp lệ." }, 400);
-    const tenantId = role === "admin" ? null : body.tenant_id || null;
-    if (role !== "admin" && !tenantId) {
-      return json({ error: "Người dùng này phải thuộc một khách hàng." }, 400);
-    }
+    const tenantId = null;
     const fullName = String(body.full_name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const status = body.status === "inactive" ? "inactive" : "active";

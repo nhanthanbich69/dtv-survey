@@ -18,7 +18,7 @@ export function SurveyDetailPage() {
     if (!id) return;
     void supabase
       .from("surveys")
-      .select("*, tenants(id, name), profiles:created_by(id, full_name, email)")
+      .select("*, profiles:created_by(id, full_name, email)")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {
@@ -27,7 +27,6 @@ export function SurveyDetailPage() {
           const s = data as unknown as Survey;
           setSurvey({
             ...s,
-            tenants: Array.isArray(s.tenants) ? s.tenants[0] : s.tenants,
             profiles: Array.isArray(s.profiles) ? s.profiles[0] : s.profiles,
           });
         }
@@ -45,7 +44,7 @@ export function SurveyDetailPage() {
         <div>
           <h3 style={{ margin: 0 }}>{survey.title}</h3>
           <p>
-            {survey.tenants?.name ?? "—"} · {SURVEY_STATUS_LABEL[survey.status]} · Tạo {formatDateTime(survey.created_at)}
+            {SURVEY_STATUS_LABEL[survey.status]} · Tạo {formatDateTime(survey.created_at)}
           </p>
         </div>
         <div className="row-actions">

@@ -8,7 +8,6 @@ const LINKS = [
   { to: "/dashboard", label: "Tổng quan" },
   { to: "/surveys", label: "Khảo sát" },
   { to: "/users", label: "Người dùng", admin: true },
-  { to: "/tenants", label: "Khách hàng", admin: true },
   { to: "/account", label: "Tài khoản" },
 ];
 
@@ -60,7 +59,6 @@ export function AppShell({ title }: { title: string }) {
         <div className="sidebar-user">
           <strong>{profile?.full_name || profile?.email}</strong>
           <span>{profile ? ROLE_LABEL[profile.role] : ""}</span>
-          {profile?.tenants?.name ? <span> · {profile.tenants.name}</span> : null}
         </div>
       </aside>
       <div className="main">

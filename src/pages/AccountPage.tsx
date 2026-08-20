@@ -48,9 +48,6 @@ export function AccountPage() {
         <div>
           <strong>Vai trò:</strong> {profile ? ROLE_LABEL[profile.role] : "—"}
         </div>
-        <div>
-          <strong>Khách hàng:</strong> {profile?.tenants?.name ?? (profile?.role === "admin" ? "Toàn hệ thống" : "—")}
-        </div>
       </div>
       <form className="card card-pad stack" onSubmit={onSubmit}>
         <strong>Đổi mật khẩu</strong>
