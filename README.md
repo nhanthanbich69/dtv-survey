@@ -15,7 +15,7 @@ npm run dev
 
 Build command: `npm run build`  
 Output directory: `dist`  
-SPA fallback đã có trong `public/_redirects`.
+SPA fallback dùng `dist/200.html` (Cloudflare Pages tự phục vụ cho mọi đường dẫn không khớp).
 
 Biến môi trường (nếu không dùng `.env.production`):
 
