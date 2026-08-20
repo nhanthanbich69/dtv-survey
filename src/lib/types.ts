@@ -37,7 +37,7 @@ export interface Profile {
   email: string | null;
   full_name: string | null;
   role: Role;
-  tenant_id: string | null;
+  tenant_id: string;
   status: UserStatus;
   created_at: string;
   updated_at: string;
@@ -64,6 +64,7 @@ export interface Survey {
 export interface ResponseRow {
   id: string;
   survey_id: string;
+  tenant_id: string;
   respondent_name: string | null;
   respondent_email: string | null;
   respondent_phone: string | null;
@@ -73,6 +74,7 @@ export interface ResponseRow {
 
 export interface Customer {
   id: string;
+  tenant_id: string;
   full_name: string | null;
   email: string | null;
   phone: string | null;

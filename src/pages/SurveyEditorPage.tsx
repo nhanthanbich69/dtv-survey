@@ -82,6 +82,10 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
       setError("Bạn không có quyền chỉnh sửa khảo sát.");
       return;
     }
+    if (!profile?.tenant_id) {
+      setError("Tài khoản chưa được gán vào tenant.");
+      return;
+    }
     if (nextStatus !== "draft" && !canPublish) {
       setError("Bạn không có quyền xuất bản hoặc đóng khảo sát.");
       return;
@@ -102,7 +106,7 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
     const publicSlug = slug.trim() || slugify(title);
     setSaving(true);
     const payload = {
-      tenant_id: null,
+      tenant_id: profile.tenant_id,
       title: title.trim(),
       description: description.trim() || null,
       public_slug: publicSlug,

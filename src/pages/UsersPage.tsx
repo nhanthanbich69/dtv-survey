@@ -148,7 +148,6 @@ function UserForm({
           password: password || undefined,
           full_name: fullName,
           role,
-          tenant_id: null,
           status,
         },
         token,

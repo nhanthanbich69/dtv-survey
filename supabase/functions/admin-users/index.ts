@@ -30,10 +30,10 @@ Deno.serve(async (req) => {
     const admin = createClient(url, serviceKey);
     const { data: caller } = await admin
       .from("profiles")
-      .select("role, status")
+      .select("role, status, tenant_id")
       .eq("id", userData.user.id)
       .maybeSingle();
-    if (!caller || caller.role !== "admin" || caller.status !== "active") {
+    if (!caller || caller.role !== "admin" || caller.status !== "active" || !caller.tenant_id) {
       return json({ error: "Bạn không có quyền quản lý người dùng." }, 403);
     }
 
@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const action = body.action as string;
     const role = String(body.role ?? "staff");
     if (!ROLES.has(role)) return json({ error: "Vai trò không hợp lệ." }, 400);
-    const tenantId = null;
+    const tenantId = caller.tenant_id;
     const fullName = String(body.full_name ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
     const status = body.status === "inactive" ? "inactive" : "active";
@@ -80,7 +80,6 @@ Deno.serve(async (req) => {
       const patch: Record<string, unknown> = {
         full_name: fullName,
         role,
-        tenant_id: tenantId,
         status,
       };
       const { error: pErr } = await admin.from("profiles").update(patch).eq("id", id);

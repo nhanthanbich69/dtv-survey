@@ -44,16 +44,30 @@ Deno.serve(async (req) => {
     if (error || !data.user) {
       return json({ error: "Không tạo được tài khoản. Email có thể đã tồn tại." }, 400);
     }
+    const { data: tenant, error: tenantError } = await admin
+      .from("tenants")
+      .insert({
+        name: `${fullName} Workspace`,
+        code: `tenant-${crypto.randomUUID().slice(0, 8)}`,
+        status: "active",
+      })
+      .select("id")
+      .single();
+    if (tenantError || !tenant) {
+      await admin.auth.admin.deleteUser(data.user.id);
+      return json({ error: "Không tạo được workspace quản trị." }, 500);
+    }
     const { error: pErr } = await admin.from("profiles").insert({
       id: data.user.id,
       email,
       full_name: fullName,
       role: "admin",
-      tenant_id: null,
+      tenant_id: tenant.id,
       status: "active",
     });
     if (pErr) {
       await admin.auth.admin.deleteUser(data.user.id);
+      await admin.from("tenants").delete().eq("id", tenant.id);
       return json({ error: "Không lưu được hồ sơ quản trị viên." }, 500);
     }
     return json({ ok: true });

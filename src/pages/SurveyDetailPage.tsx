@@ -9,19 +9,19 @@ import { QuestionPreview } from "../components/QuestionPreview";
 
 export function SurveyDetailPage() {
   const { id } = useParams();
-  const { canWriteSurveys, canPublish } = useAuth();
+  const { profile, isAdmin, canWriteSurveys, canPublish } = useAuth();
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [missing, setMissing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!id) return;
-    void supabase
+    const query = supabase
       .from("surveys")
       .select("*, profiles:created_by(id, full_name, email)")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }) => {
+      .eq("id", id);
+    if (!isAdmin && profile?.tenant_id) query.eq("tenant_id", profile.tenant_id);
+    void query.maybeSingle().then(({ data }) => {
         if (!data) setMissing(true);
         else {
           const s = data as unknown as Survey;

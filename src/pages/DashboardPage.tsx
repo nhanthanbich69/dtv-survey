@@ -15,13 +15,14 @@ type Stats = {
 };
 
 export function DashboardPage() {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
       const surveyQuery = supabase.from("surveys").select("id, title, status, created_at, published_at");
+      if (!isAdmin && profile?.tenant_id) surveyQuery.eq("tenant_id", profile.tenant_id);
       const { data: surveys, error: sErr } = await surveyQuery.order("created_at", { ascending: false });
       if (sErr) {
         setError("Không tải được dữ liệu tổng quan.");

@@ -9,7 +9,7 @@ import { Button, Modal, Spinner, useToast } from "../components/ui";
 import { asOne } from "../lib/cast";
 
 export function SurveysPage() {
-  const { profile, canWriteSurveys, canPublish, canDeleteSurveys } = useAuth();
+  const { profile, isAdmin, canWriteSurveys, canPublish, canDeleteSurveys } = useAuth();
   const [rows, setRows] = useState<Survey[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,7 @@ export function SurveysPage() {
       .from("surveys")
       .select("*, profiles:created_by(id, full_name, email)")
       .order("created_at", { ascending: false });
+    if (!isAdmin && profile?.tenant_id) q.eq("tenant_id", profile.tenant_id);
     const { data, error: err } = await q;
     if (err) {
       setError("Không tải được danh sách khảo sát.");
@@ -87,7 +88,7 @@ export function SurveysPage() {
   async function duplicate(s: Survey) {
     setBusyId(s.id);
     const { error: err } = await supabase.from("surveys").insert({
-      tenant_id: null,
+      tenant_id: profile?.tenant_id,
       created_by: profile?.id,
       title: `${s.title} (bản sao)`,
       description: s.description,

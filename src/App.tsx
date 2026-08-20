@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedLayout } from "./components/ProtectedLayout";
-import { LoginPage, RegisterPage } from "./pages/LoginPage";
+import { LoginPage } from "./pages/LoginPage";
 import { SetupPage } from "./pages/SetupPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { SurveysPage } from "./pages/SurveysPage";
@@ -18,7 +18,6 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
       <Route path="/setup" element={<SetupPage />} />
       <Route path="/s/:public_slug" element={<PublicSurveyPage />} />
       <Route element={<ProtectedLayout />}>

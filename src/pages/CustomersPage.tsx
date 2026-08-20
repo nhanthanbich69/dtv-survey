@@ -3,18 +3,22 @@ import { supabase } from "../lib/supabase";
 import { formatDateTime } from "../lib/survey";
 import type { Customer } from "../lib/types";
 import { Spinner } from "../components/ui";
+import { useAuth } from "../lib/auth";
 
 export function CustomersPage() {
+  const { profile, isAdmin } = useAuth();
   const [rows, setRows] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
-      const { data, error: queryError } = await supabase
+      const customerQuery = supabase
         .from("customers")
         .select("*")
         .order("created_at", { ascending: false });
+      if (!isAdmin && profile?.tenant_id) customerQuery.eq("tenant_id", profile.tenant_id);
+      const { data, error: queryError } = await customerQuery;
       if (queryError) setError("Không tải được danh sách khách hàng.");
       else {
         const customers = Array.isArray(data) ? data : [];

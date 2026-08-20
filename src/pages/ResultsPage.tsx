@@ -20,7 +20,7 @@ function surveyQuestions(survey: Survey | null): Question[] {
 
 export function ResultsPage() {
   const { id } = useParams();
-  const { canExport } = useAuth();
+  const { profile, isAdmin, canExport } = useAuth();
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [rows, setRows] = useState<ResponseRow[]>([]);
   const [detail, setDetail] = useState<ResponseRow | null>(null);
@@ -31,7 +31,9 @@ export function ResultsPage() {
   useEffect(() => {
     if (!id) return;
     void (async () => {
-      const { data: s } = await supabase.from("surveys").select("*").eq("id", id).maybeSingle();
+      const surveyQuery = supabase.from("surveys").select("*").eq("id", id);
+      if (!isAdmin && profile?.tenant_id) surveyQuery.eq("tenant_id", profile.tenant_id);
+      const { data: s } = await surveyQuery.maybeSingle();
       if (!s) {
         setError("Không tìm thấy khảo sát hoặc bạn không có quyền xem kết quả.");
         return;
