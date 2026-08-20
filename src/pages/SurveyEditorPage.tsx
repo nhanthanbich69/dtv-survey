@@ -23,7 +23,7 @@ const TYPES = Object.keys(QUESTION_TYPE_LABEL) as QuestionType[];
 
 export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
   const { id } = useParams();
-  const { profile, canPublish, canWriteSurveys } = useAuth();
+  const { profile, isAdmin, canPublish, canWriteSurveys } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const [loading, setLoading] = useState(mode === "edit");

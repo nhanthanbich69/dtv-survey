@@ -71,6 +71,16 @@ export interface ResponseRow {
   submitted_at: string;
 }
 
+export interface Customer {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  source_response_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const ROLE_LABEL: Record<Role, string> = {
   admin: "Quản trị viên",
   manager: "Quản lý",

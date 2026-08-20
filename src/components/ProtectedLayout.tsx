@@ -4,6 +4,7 @@ import { AppShell as Shell, RequireAuth } from "./layout";
 const TITLES: Record<string, string> = {
   "/dashboard": "Tổng quan",
   "/surveys": "Khảo sát",
+  "/customers": "Khách hàng",
   "/surveys/new": "Tạo khảo sát",
   "/users": "Người dùng",
   "/tenants": "Khách hàng",

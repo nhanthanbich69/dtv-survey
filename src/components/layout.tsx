@@ -7,6 +7,7 @@ import { Button, Spinner } from "./ui";
 const LINKS = [
   { to: "/dashboard", label: "Tổng quan" },
   { to: "/surveys", label: "Khảo sát" },
+  { to: "/customers", label: "Khách hàng" },
   { to: "/users", label: "Người dùng", admin: true },
   { to: "/account", label: "Tài khoản" },
 ];
