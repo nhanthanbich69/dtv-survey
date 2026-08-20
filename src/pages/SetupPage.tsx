@@ -24,8 +24,8 @@ export function SetupPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (password.length < 8) {
-      setError("Mật khẩu cần ít nhất 8 ký tự.");
+    if (!password.trim()) {
+      setError("Mật khẩu không được bỏ trống.");
       return;
     }
     setBusy(true);
@@ -79,7 +79,7 @@ export function SetupPage() {
         </label>
         <label className="field">
           Mật khẩu
-          <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         <Button type="submit" disabled={busy}>
           {busy ? "Đang tạo..." : "Tạo quản trị viên"}
