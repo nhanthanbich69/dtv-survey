@@ -16,7 +16,10 @@ export function CustomersPage() {
         .select("*")
         .order("created_at", { ascending: false });
       if (queryError) setError("Không tải được danh sách khách hàng.");
-      else setRows((data ?? []) as Customer[]);
+      else {
+        const customers = Array.isArray(data) ? data : [];
+        setRows(customers as Customer[]);
+      }
       setLoading(false);
     })();
   }, []);

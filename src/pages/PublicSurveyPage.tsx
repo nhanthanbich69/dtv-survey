@@ -35,7 +35,11 @@ export function PublicSurveyPage() {
           setState("missing");
           return;
         }
-        const s = data as PublicSurvey;
+        const raw = data as PublicSurvey;
+        const s: PublicSurvey = {
+          ...raw,
+          questions: Array.isArray(raw.questions) ? raw.questions : [],
+        };
         if (s.status !== "published") {
           setState("unavailable");
           return;
@@ -51,7 +55,7 @@ export function PublicSurveyPage() {
 
   function validate(): string | null {
     if (!survey) return "Khảo sát không khả dụng.";
-    for (const q of survey.questions ?? []) {
+    for (const q of Array.isArray(survey.questions) ? survey.questions : []) {
       const v = answers[q.id];
       if (!q.required) continue;
       if (q.type === "multiple_choice") {
@@ -62,7 +66,7 @@ export function PublicSurveyPage() {
     }
     const email = meta.email.trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Email không hợp lệ.";
-    for (const q of survey.questions ?? []) {
+    for (const q of Array.isArray(survey.questions) ? survey.questions : []) {
       const v = answers[q.id];
       if (q.type === "number" && v !== undefined && v !== "" && Number.isNaN(Number(v))) {
         return `Giá trị số không hợp lệ: ${q.label}`;
@@ -157,7 +161,7 @@ export function PublicSurveyPage() {
           Số điện thoại
           <input value={meta.phone} onChange={(e) => setMeta({ ...meta, phone: e.target.value })} />
         </label>
-        {(survey.questions ?? []).map((q, i) => (
+        {(Array.isArray(survey.questions) ? survey.questions : []).map((q, i) => (
           <Field key={q.id} index={i} question={q} value={answers[q.id]} onChange={(v) => setAnswer(q.id, v)} />
         ))}
         <Button type="submit" disabled={busy}>

@@ -14,6 +14,10 @@ function answerText(q: Question, value: AnswerValue) {
   return String(value);
 }
 
+function surveyQuestions(survey: Survey | null): Question[] {
+  return survey && Array.isArray(survey.questions) ? survey.questions : [];
+}
+
 export function ResultsPage() {
   const { id } = useParams();
   const { canExport } = useAuth();
@@ -53,7 +57,7 @@ export function ResultsPage() {
 
   const summary = useMemo(() => {
     if (!survey) return [];
-    return (survey.questions ?? []).map((question) => {
+    return surveyQuestions(survey).map((question) => {
       const values = rows.map((r) => r.answers?.[question.id]).filter((v) => v !== undefined && v !== null && v !== "");
       if (["single_choice", "multiple_choice", "yes_no"].includes(question.type)) {
         const counts = new Map<string, number>();
@@ -85,7 +89,7 @@ export function ResultsPage() {
       return;
     }
     try {
-      const questions = survey.questions ?? [];
+      const questions = surveyQuestions(survey);
       const header = ["Thời gian", "Họ tên", "Email", "Điện thoại", ...questions.map((qq) => qq.label)];
       const body = rows.map((r) => [
         r.submitted_at,
@@ -196,7 +200,7 @@ export function ResultsPage() {
       {detail ? (
         <Modal title="Chi tiết câu trả lời" onClose={() => setDetail(null)}>
           <p className="muted">{formatDateTime(detail.submitted_at)}</p>
-          {(survey.questions ?? []).map((qq) => (
+          {surveyQuestions(survey).map((qq) => (
             <p key={qq.id}>
               <strong>{qq.label}</strong>
               <br />
