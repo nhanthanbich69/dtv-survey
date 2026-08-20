@@ -97,6 +97,7 @@ function RegisterForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [registered, setRegistered] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -110,6 +111,10 @@ function RegisterForm() {
     }
     if (!password.trim()) {
       setError("Mật khẩu không được bỏ trống.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
       return;
     }
     setBusy(true);
@@ -171,6 +176,10 @@ function RegisterForm() {
         <label className="field">
           Mật khẩu
           <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+        </label>
+        <label className="field">
+          Xác nhận mật khẩu
+          <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
         </label>
         <Button type="submit" disabled={busy || registered}>
           {busy ? "Đang tạo..." : "Tạo tài khoản"}
