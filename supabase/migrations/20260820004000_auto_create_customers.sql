@@ -25,21 +25,48 @@ DROP POLICY IF EXISTS "customers_auth_select" ON public.customers;
 CREATE POLICY "customers_auth_select" ON public.customers
   FOR SELECT TO authenticated USING (true);
 
+-- Hàm xử lý tối ưu: Tự động cập nhật thông tin mới nhất nếu trùng email hoặc số điện thoại
 CREATE OR REPLACE FUNCTION public.create_customer_from_response()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  v_email text;
+  v_phone text;
+  v_name text;
 BEGIN
-  INSERT INTO public.customers (full_name, email, phone, source_response_id)
-  VALUES (
-    NULLIF(trim(NEW.respondent_name), ''),
-    NULLIF(lower(trim(NEW.respondent_email)), ''),
-    NULLIF(trim(NEW.respondent_phone), ''),
-    NEW.id
-  )
-  ON CONFLICT DO NOTHING;
+  v_name := NULLIF(trim(NEW.respondent_name), '');
+  v_email := NULLIF(lower(trim(NEW.respondent_email)), '');
+  v_phone := NULLIF(trim(NEW.respondent_phone), '');
+
+  -- 1. Thử chèn theo email trước nếu có email
+  IF v_email IS NOT NULL THEN
+    INSERT INTO public.customers (full_name, email, phone, source_response_id)
+    VALUES (v_name, v_email, v_phone, NEW.id)
+    ON CONFLICT (lower(email)) WHERE email IS NOT NULL AND length(trim(email)) > 0
+    DO UPDATE SET 
+      full_name = COALESCE(EXCLUDED.full_name, customers.full_name),
+      phone = COALESCE(EXCLUDED.phone, customers.phone),
+      source_response_id = EXCLUDED.source_response_id,
+      updated_at = now();
+      
+  -- 2. Nếu không có email mà có số điện thoại thì xử lý theo số điện thoại
+  ELSIF v_phone IS NOT NULL THEN
+    INSERT INTO public.customers (full_name, email, phone, source_response_id)
+    VALUES (v_name, v_email, v_phone, NEW.id)
+    ON CONFLICT (phone) WHERE phone IS NOT NULL AND length(trim(phone)) > 0
+    DO UPDATE SET 
+      full_name = COALESCE(EXCLUDED.full_name, customers.full_name),
+      source_response_id = EXCLUDED.source_response_id,
+      updated_at = now();
+      
+  -- 3. Trường hợp ẩn danh hoàn toàn (không email, không sđt) thì tạo mới bình thường
+  ELSE
+    INSERT INTO public.customers (full_name, email, phone, source_response_id)
+    VALUES (v_name, v_email, v_phone, NEW.id);
+  END IF;
 
   RETURN NEW;
 END;
