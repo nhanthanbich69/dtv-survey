@@ -2,6 +2,7 @@ export type Role = "admin" | "manager" | "staff" | "viewer";
 export type UserStatus = "active" | "inactive";
 export type TenantStatus = "active" | "inactive";
 export type SurveyStatus = "draft" | "published" | "closed";
+export type AssignmentStatus = "assigned" | "in_progress" | "completed" | "cancelled";
 
 export type QuestionType =
   | "short_text"
@@ -52,12 +53,14 @@ export interface Survey {
   description: string | null;
   status: SurveyStatus;
   public_slug: string;
+  customer_id: string | null;
   questions: Question[];
   created_at: string;
   updated_at: string;
   published_at: string | null;
   tenants?: Pick<Tenant, "id" | "name" | "code"> | null;
   profiles?: Pick<Profile, "id" | "full_name" | "email"> | null;
+  customers?: Pick<Customer, "id" | "full_name" | "code"> | null;
   response_count?: number;
 }
 
@@ -75,12 +78,32 @@ export interface ResponseRow {
 export interface Customer {
   id: string;
   tenant_id: string;
+  code: string | null;
   full_name: string | null;
+  contact_person: string | null;
   email: string | null;
   phone: string | null;
+  notes: string | null;
+  status: "active" | "inactive";
   source_response_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface SurveyAssignment {
+  id: string;
+  tenant_id: string;
+  survey_id: string;
+  assignee_id: string;
+  assigned_by: string;
+  status: AssignmentStatus;
+  assigned_at: string;
+  due_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  surveys?: Pick<Survey, "id" | "title" | "status"> | null;
+  profiles?: Pick<Profile, "id" | "full_name" | "email"> | null;
 }
 
 export const ROLE_LABEL: Record<Role, string> = {

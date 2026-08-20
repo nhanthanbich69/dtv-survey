@@ -6,6 +6,10 @@ import { formatDateTime } from "../lib/survey";
 import { SURVEY_STATUS_LABEL, type Survey, type SurveyStatus } from "../lib/types";
 import { Spinner } from "../components/ui";
 type Stats = {
+  customers: number;
+  assigned: number;
+  completed: number;
+  pending: number;
   total: number;
   draft: number;
   published: number;
@@ -30,6 +34,11 @@ export function DashboardPage() {
       }
       const list = (surveys ?? []) as unknown as Survey[];
       const ids = list.map((s) => s.id);
+      const [{ count: customerCount }, { data: assignmentRows }] = await Promise.all([
+        supabase.from("customers").select("id", { count: "exact", head: true }),
+        ids.length ? supabase.from("survey_assignments").select("status").in("survey_id", ids) : Promise.resolve({ data: [] as { status: string }[] }),
+      ]);
+      const assignments = assignmentRows ?? [];
       let responseCount = 0;
       if (ids.length) {
         const { count } = await supabase
@@ -40,6 +49,10 @@ export function DashboardPage() {
       }
       const by = (st: SurveyStatus) => list.filter((s) => s.status === st).length;
       setStats({
+        customers: customerCount ?? 0,
+        assigned: assignments.filter((assignment) => assignment.status === "assigned").length,
+        completed: assignments.filter((assignment) => assignment.status === "completed").length,
+        pending: assignments.filter((assignment) => assignment.status === "assigned" || assignment.status === "in_progress").length,
         total: list.length,
         draft: by("draft"),
         published: by("published"),
@@ -62,6 +75,7 @@ export function DashboardPage() {
         </div>
       </div>
       <div className="stats">
+        <div className="card stat"><div className="label">Khách hàng</div><div className="value">{stats.customers}</div></div>
         <div className="card stat">
           <div className="label">Tổng khảo sát</div>
           <div className="value">{stats.total}</div>
@@ -80,6 +94,8 @@ export function DashboardPage() {
           <div className="label">Lượt trả lời</div>
           <div className="value">{stats.responses}</div>
         </div>
+        <div className="card stat"><div className="label">Đã phân công</div><div className="value">{stats.assigned}</div></div>
+        <div className="card stat"><div className="label">Hoàn tất / Đang chờ</div><div className="value">{stats.completed} / {stats.pending}</div></div>
       </div>
       <div className="card">
         <div className="card-pad" style={{ borderBottom: "1px solid var(--line)" }}>

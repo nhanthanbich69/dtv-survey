@@ -4,14 +4,15 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 import { formatDateTime, slugify } from "../lib/survey";
 import { friendlyError } from "../lib/errors";
-import { SURVEY_STATUS_LABEL, type Survey } from "../lib/types";
+import { SURVEY_STATUS_LABEL, type Survey, type SurveyAssignment } from "../lib/types";
 import { Button, Modal, Spinner, useToast } from "../components/ui";
 import { asOne } from "../lib/cast";
 
 export function SurveysPage() {
-  const { profile, isAdmin, canWriteSurveys, canPublish, canDeleteSurveys } = useAuth();
+  const { profile, isAdmin, role, canWriteSurveys, canPublish, canDeleteSurveys } = useAuth();
   const [rows, setRows] = useState<Survey[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [assignments, setAssignments] = useState<Record<string, SurveyAssignment[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Survey | null>(null);
@@ -23,7 +24,7 @@ export function SurveysPage() {
     setLoading(true);
     const q = supabase
       .from("surveys")
-      .select("*, profiles:created_by(id, full_name, email)")
+      .select("*, profiles:created_by(id, full_name, email), customers:customer_id(id, full_name, code)")
       .order("created_at", { ascending: false });
     if (!isAdmin && profile?.tenant_id) q.eq("tenant_id", profile.tenant_id);
     const { data, error: err } = await q;
@@ -39,11 +40,26 @@ export function SurveysPage() {
         profiles: asOne<NonNullable<Survey["profiles"]>>(s.profiles),
       };
     });
-    setRows(surveys);
-    if (surveys.length) {
+    let visibleSurveys = surveys;
+    if (role === "staff" && profile?.id) {
+      const { data: assignedRows } = await supabase.from("survey_assignments").select("*, profiles:assignee_id(id, full_name, email)").eq("assignee_id", profile.id);
+      const assigned = (assignedRows ?? []) as unknown as SurveyAssignment[];
+      const allowed = new Set(assigned.map((assignment) => assignment.survey_id));
+      visibleSurveys = surveys.filter((survey) => allowed.has(survey.id));
+      const grouped: Record<string, SurveyAssignment[]> = {};
+      for (const assignment of assigned) grouped[assignment.survey_id] = [...(grouped[assignment.survey_id] ?? []), assignment];
+      setAssignments(grouped);
+    } else {
+      const { data: assignmentRows } = await supabase.from("survey_assignments").select("*, profiles:assignee_id(id, full_name, email)").in("survey_id", surveys.map((survey) => survey.id));
+      const grouped: Record<string, SurveyAssignment[]> = {};
+      for (const assignment of (assignmentRows ?? []) as unknown as SurveyAssignment[]) grouped[assignment.survey_id] = [...(grouped[assignment.survey_id] ?? []), assignment];
+      setAssignments(grouped);
+    }
+    setRows(visibleSurveys);
+    if (visibleSurveys.length) {
       const { data: resp } = await supabase.from("responses").select("survey_id").in(
         "survey_id",
-        surveys.map((s) => s.id),
+        visibleSurveys.map((s) => s.id),
       );
       const map: Record<string, number> = {};
       for (const r of resp ?? []) {
@@ -58,7 +74,7 @@ export function SurveysPage() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAdmin, profile?.id, profile?.tenant_id, role]);
 
   async function publish(s: Survey) {
     setBusyId(s.id);
@@ -141,7 +157,9 @@ export function SurveysPage() {
               <thead>
                 <tr>
                   <th>Tên khảo sát</th>
+                  <th>Khách hàng</th>
                   <th>Trạng thái</th>
+                  <th>Phụ trách</th>
                   <th>Số lượt trả lời</th>
                   <th>Người tạo</th>
                   <th>Ngày tạo</th>
@@ -152,9 +170,11 @@ export function SurveysPage() {
                 {rows.map((s) => (
                   <tr key={s.id}>
                     <td>{s.title}</td>
+                    <td>{(s as Survey & { customers?: { full_name: string | null; code: string | null } | null }).customers?.full_name || "Khảo sát chung"}</td>
                     <td>
                       <span className={`badge ${s.status}`}>{SURVEY_STATUS_LABEL[s.status]}</span>
                     </td>
+                    <td>{(assignments[s.id] ?? []).map((assignment) => assignment.profiles?.full_name || assignment.profiles?.email).filter(Boolean).join(", ") || "Chưa phân công"}</td>
                     <td>{counts[s.id] ?? 0}</td>
                     <td>{s.profiles?.full_name || s.profiles?.email || "—"}</td>
                     <td>{formatDateTime(s.created_at)}</td>

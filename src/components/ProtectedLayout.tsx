@@ -17,6 +17,7 @@ export function ProtectedLayout() {
   let title = TITLES[location.pathname] ?? "DTV Survey";
   if (location.pathname.endsWith("/edit")) title = "Chỉnh sửa khảo sát";
   else if (location.pathname.endsWith("/results")) title = "Kết quả khảo sát";
+  else if (params.id && location.pathname.startsWith("/customers/")) title = "Chi tiết khách hàng";
   else if (params.id && location.pathname.startsWith("/surveys/")) title = "Chi tiết khảo sát";
   return (
     <RequireAuth>

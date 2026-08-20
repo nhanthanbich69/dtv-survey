@@ -29,6 +29,8 @@ type AuthContextValue = AuthState & {
   canPublish: boolean;
   canDeleteSurveys: boolean;
   canExport: boolean;
+  canManageCustomers: boolean;
+  canManageAssignments: boolean;
   role: Role | null;
 };
 
@@ -109,6 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canPublish: role === "admin" || role === "manager",
       canDeleteSurveys: role === "admin",
       canExport: role === "admin" || role === "manager",
+      canManageCustomers: role === "admin" || role === "manager" || role === "staff",
+      canManageAssignments: role === "admin" || role === "manager",
     }),
     [state, refresh, signOut, role],
   );

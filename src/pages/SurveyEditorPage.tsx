@@ -12,6 +12,7 @@ import {
 import { friendlyError } from "../lib/errors";
 import {
   QUESTION_TYPE_LABEL,
+  type Customer,
   type Question,
   type QuestionType,
   type Survey,
@@ -34,8 +35,16 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
   const [slugLocked, setSlugLocked] = useState(false);
   const [status, setStatus] = useState<Survey["status"]>("draft");
   const [questions, setQuestions] = useState<Question[]>([createQuestion()]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerId, setCustomerId] = useState("");
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void supabase.from("customers").select("id, full_name, code, status").eq("status", "active").order("full_name").then(({ data }) => {
+      setCustomers((data ?? []) as unknown as Customer[]);
+    });
+  }, []);
 
   useEffect(() => {
     if (mode !== "edit" || !id) return;
@@ -54,6 +63,7 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
         setTitle(s.title);
         setDescription(s.description ?? "");
         setSlug(s.public_slug);
+        setCustomerId(s.customer_id ?? "");
         setSlugLocked(s.status !== "draft");
         setStatus(s.status);
         setQuestions(Array.isArray(s.questions) && s.questions.length ? (s.questions as Question[]) : [createQuestion()]);
@@ -105,8 +115,8 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
     }
     const publicSlug = slug.trim() || slugify(title);
     setSaving(true);
-    const payload = {
-      tenant_id: profile.tenant_id,
+    const fields = {
+      customer_id: customerId || null,
       title: title.trim(),
       description: description.trim() || null,
       public_slug: publicSlug,
@@ -116,7 +126,7 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
       created_by: profile?.id ?? null,
     };
     if (mode === "new") {
-      const { data, error: err } = await supabase.from("surveys").insert(payload).select("id").single();
+      const { data, error: err } = await supabase.from("surveys").insert({ ...fields, tenant_id: profile.tenant_id }).select("id").single();
       setSaving(false);
       if (err) {
         setError(friendlyError(err, "Không lưu được khảo sát."));
@@ -126,7 +136,7 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
       navigate(`/surveys/${data.id}`);
       return;
     }
-    const updatePayload = { ...payload };
+    const updatePayload = { ...fields };
     if (mode === "edit") delete (updatePayload as { created_by?: string }).created_by;
     const { error: err } = await supabase.from("surveys").update(updatePayload).eq("id", id);
     setSaving(false);
@@ -160,6 +170,13 @@ export function SurveyEditorPage({ mode }: { mode: "new" | "edit" }) {
         <label className="field">
           Mô tả
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        </label>
+        <label className="field">
+          Khách hàng
+          <select value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+            <option value="">Khảo sát chung</option>
+            {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.full_name || "Chưa có tên"}{customer.code ? ` (${customer.code})` : ""}</option>)}
+          </select>
         </label>
         <label className="field">
           Đường dẫn công khai
