@@ -3,11 +3,9 @@ import { createClient } from "@supabase/supabase-js";
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!url || !anonKey) {
-  throw new Error("Thiếu cấu hình kết nối. Vui lòng liên hệ quản trị viên.");
-}
+export const supabaseConfigError = !url || !anonKey ? "Thiếu cấu hình kết nối Supabase." : null;
 
-export const supabase = createClient(url, anonKey, {
+export const supabase = createClient(url || "https://missing-supabase-config.invalid", anonKey || "missing-supabase-config", {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
