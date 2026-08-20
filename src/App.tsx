@@ -11,12 +11,12 @@ import { UsersPage } from "./pages/UsersPage";
 import { CustomersPage } from "./pages/CustomersPage";
 
 import { AccountPage } from "./pages/AccountPage";
-import { HomePage, NotFoundPage, PublicSurveyPage } from "./pages/PublicSurveyPage";
+import { NotFoundPage, PublicSurveyPage } from "./pages/PublicSurveyPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/setup" element={<SetupPage />} />
       <Route path="/s/:public_slug" element={<PublicSurveyPage />} />

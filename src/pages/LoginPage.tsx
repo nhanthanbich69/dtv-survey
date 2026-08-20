@@ -62,6 +62,9 @@ function LoginForm() {
           {busy ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
         <p className="hint">
+          Chưa có tài khoản? <Link to="/setup">Tạo tài khoản quản trị</Link>
+        </p>
+        <p className="hint">
           Tài khoản do quản trị viên cấp. <Link to="/setup">Thiết lập lần đầu</Link> chỉ dùng khi hệ thống chưa có quản trị viên.
         </p>
       </form>
